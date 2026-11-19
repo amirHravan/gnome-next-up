@@ -9,7 +9,6 @@ import { gettext as _ } from "resource:///org/gnome/shell/extensions/extension.j
 export default class Indicator extends PanelMenu.Button {
   constructor(props) {
     super();
-    this._confettiGicon = props.confettiGicon;
     this._openPrefsCallback = props.openPrefsCallback;
   }
 
@@ -20,6 +19,9 @@ export default class Indicator extends PanelMenu.Button {
 
     this._loadGUI();
     this._initialiseMenu();
+
+    // Stay hidden until a refresh finds an event to show
+    this.hide();
   }
 
   _loadGUI() {
@@ -41,7 +43,7 @@ export default class Indicator extends PanelMenu.Button {
     this.icon = this._alarmIcon;
 
     this.text = new St.Label({
-      text: "Loading",
+      text: "",
       y_expand: true,
       y_align: Clutter.ActorAlign.CENTER,
     });
@@ -65,12 +67,16 @@ export default class Indicator extends PanelMenu.Button {
     this.text.set_text(text);
   }
 
-  showAlarmIcon() {
-    this.icon.set_icon_name("alarm-symbolic");
-  }
+  setVisible(visible) {
+    if (this.visible === visible)
+      return;
 
-  showConfettiIcon() {
-    this.icon.set_gicon(this._confettiGicon);
+    if (visible) {
+      this.show();
+    } else {
+      this.menu.close();
+      this.hide();
+    }
   }
 
   vfunc_event(event) {

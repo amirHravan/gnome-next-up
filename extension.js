@@ -24,25 +24,25 @@ import { Extension } from "resource:///org/gnome/shell/extensions/extension.js";
 
 import Indicator from "./src/indicator.js";
 import * as DateHelperFunctions from "./src/date.js";
-import Gio from "gi://Gio";
 
 const IndicatorInstance = GObject.registerClass(Indicator);
 
 export default class NextUpExtension extends Extension {
   enable() {
     this._indicator = new IndicatorInstance({
-      confettiGicon: Gio.icon_new_for_string(
-        this.path + "/assets/party-popper.png"
-      ),
       openPrefsCallback: this.openPreferences.bind(this),
     });
 
     this._settings = this.getSettings();
     this._settingChangedSignal = this._settings.connect(
-      "changed::which-panel",
-      () => {
-        this.unloadIndicator();
-        this.loadIndicator();
+      "changed",
+      (_settings, key) => {
+        if (key === "which-panel") {
+          this.unloadIndicator();
+          this.loadIndicator();
+        } else if (key === "look-ahead-minutes") {
+          this.refreshIndicator();
+        }
       }
     );
 
@@ -53,6 +53,7 @@ export default class NextUpExtension extends Extension {
       3,
       () => {
         this.loadIndicator();
+        this.refreshIndicator();
         this._startLoop();
 
         return false;
@@ -90,28 +91,33 @@ export default class NextUpExtension extends Extension {
   unloadIndicator() {
     this._indicator.container
       .get_parent()
-      .remove_child(this._indicator.container);
+      ?.remove_child(this._indicator.container);
   }
 
   refreshIndicator() {
-    const todaysEvents = DateHelperFunctions.getTodaysEvents(
-      this._indicator._calendarSource
+    const lookAheadMinutes = this._settings.get_int("look-ahead-minutes");
+    const events = DateHelperFunctions.getEventsToDisplay(
+      this._indicator._calendarSource,
+      lookAheadMinutes
     );
-    const eventStatus =
-      DateHelperFunctions.getNextEventsToDisplay(todaysEvents);
-    const text = DateHelperFunctions.eventStatusToIndicatorText(eventStatus);
+    const eventStatus = DateHelperFunctions.getNextEventsToDisplay(
+      events,
+      lookAheadMinutes
+    );
+    const hasEvent =
+      eventStatus.currentEvent !== null || eventStatus.nextEvent !== null;
 
-    if (eventStatus.currentEvent === null && eventStatus.nextEvent === null) {
-      this._indicator.showConfettiIcon();
-    } else {
-      this._indicator.showAlarmIcon();
+    this._indicator.setVisible(hasEvent);
+
+    if (hasEvent) {
+      this._indicator.setText(
+        DateHelperFunctions.eventStatusToIndicatorText(eventStatus)
+      );
     }
-
-    this._indicator.setText(text);
   }
 
   disable() {
-    Main.panel._centerBox.remove_child(this._indicator.container);
+    this.unloadIndicator();
 
     this._settings.disconnect(this._settingChangedSignal);
     this._settings = null;

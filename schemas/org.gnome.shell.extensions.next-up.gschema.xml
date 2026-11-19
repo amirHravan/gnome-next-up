@@ -5,5 +5,11 @@
     <key name="which-panel" type="i">
       <default>1</default>
     </key>
+    <key name="look-ahead-minutes" type="i">
+      <range min="0" max="1440"/>
+      <default>0</default>
+      <summary>Look-ahead window in minutes</summary>
+      <description>Only show events starting within this many minutes from now. 0 shows all of today's events.</description>
+    </key>
   </schema>
 </schemalist>

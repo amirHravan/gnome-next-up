@@ -17,7 +17,7 @@ function notFullDayEvent(event) {
   );
 }
 
-export function getTodaysEvents(calendarSource) {
+export function getEventsToDisplay(calendarSource, lookAheadMinutes = 0) {
   const src = calendarSource;
   src._loadEvents(true);
 
@@ -27,14 +27,29 @@ export function getTodaysEvents(calendarSource) {
   const tomorrow = new Date(today);
   tomorrow.setDate(today.getDate() + 1);
 
-  const todaysEvents = src.getEvents(today, tomorrow).filter(notFullDayEvent);
+  // A look-ahead window can reach past midnight
+  let rangeEnd = tomorrow;
+  if (lookAheadMinutes > 0) {
+    const cutoff = new Date(Date.now() + lookAheadMinutes * 60000);
+    if (cutoff > rangeEnd)
+      rangeEnd = cutoff;
+  }
 
-  return todaysEvents;
+  const events = src.getEvents(today, rangeEnd).filter(notFullDayEvent);
+
+  return events;
 }
 
-export function getNextEventsToDisplay(todaysEvents) {
+export function getNextEventsToDisplay(events, lookAheadMinutes = 0) {
   const now = new Date();
-  const N = todaysEvents.length;
+
+  const cutoff = lookAheadMinutes > 0
+    ? now.getTime() + lookAheadMinutes * 60000
+    : Infinity;
+
+  // Ongoing events started before now, so they always pass the cutoff
+  const candidates = events.filter((event) => event.date.getTime() <= cutoff);
+  const N = candidates.length;
 
   let currentEvent = null; // The calendar event the user is currently in
   let nextEvent = null; // The next calendar event coming up
@@ -43,7 +58,7 @@ export function getNextEventsToDisplay(todaysEvents) {
   for (let i = 0; i < N; i++) {
     if (done) break;
 
-    const event = todaysEvents[i];
+    const event = candidates[i];
     const eventStart = event.date;
     const eventEnd = event.end;
 
@@ -58,7 +73,7 @@ export function getNextEventsToDisplay(todaysEvents) {
         let someNextEvent;
 
         for (let j = i + 1; j < N; j++) {
-          someNextEvent = todaysEvents[j];
+          someNextEvent = candidates[j];
 
           // Check whether the next event overlaps the current event
           // or whether they start at the same time
@@ -129,7 +144,7 @@ function getTimeOfEventAsText(eventDate) {
   const hrs = eventDate.getHours();
   let mins = eventDate.getMinutes().toString();
 
-  mins = mins.padEnd(2, "0"); // Show e.g. 11am as 11:00 instead of 11:0
+  mins = mins.padStart(2, "0"); // Show e.g. 11am as 11:00 instead of 11:0
 
   const time = `${hrs}:${mins}`;
   return time;

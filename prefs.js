@@ -38,6 +38,25 @@ export default class NextUpExtensionPreferences extends ExtensionPreferences {
     row.add_suffix(dropdown);
     row.activatable_widget = dropdown;
 
+    const lookAheadRow = new Adw.SpinRow({
+      title: "Only show events starting within",
+      subtitle: "Minutes ahead; 0 shows all of today's events",
+      adjustment: new Gtk.Adjustment({
+        lower: 0,
+        upper: 1440,
+        step_increment: 15,
+      }),
+    });
+
+    settings.bind(
+      "look-ahead-minutes",
+      lookAheadRow,
+      "value",
+      Gio.SettingsBindFlags.DEFAULT
+    );
+
+    group.add(lookAheadRow);
+
     // Add our page to the window
     window.add(page);
   }
