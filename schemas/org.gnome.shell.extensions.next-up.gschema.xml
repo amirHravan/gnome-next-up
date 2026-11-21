@@ -11,5 +11,11 @@
       <summary>Look-ahead window in minutes</summary>
       <description>Only show events starting within this many minutes from now. 0 shows all of today's events.</description>
     </key>
+    <key name="max-summary-length" type="i">
+      <range min="0" max="200"/>
+      <default>35</default>
+      <summary>Maximum event name length</summary>
+      <description>Truncate event names longer than this many characters. 0 shows the full name.</description>
+    </key>
   </schema>
 </schemalist>

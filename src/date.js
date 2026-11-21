@@ -1,8 +1,8 @@
 const MAX_EVENT_SUMMARY_LENGTH = 35;
 
-function trimLongEventName(summary) {
-  if (summary.length > MAX_EVENT_SUMMARY_LENGTH) {
-    return summary.substring(0, MAX_EVENT_SUMMARY_LENGTH) + "...";
+function trimLongEventName(summary, maxLength) {
+  if (maxLength > 0 && summary.length > maxLength) {
+    return summary.substring(0, maxLength) + "...";
   } else {
     return summary;
   }
@@ -94,12 +94,15 @@ export function getNextEventsToDisplay(events, lookAheadMinutes = 0) {
   };
 }
 
-export function eventStatusToIndicatorText(eventStatus) {
+export function eventStatusToIndicatorText(
+  eventStatus,
+  maxSummaryLength = MAX_EVENT_SUMMARY_LENGTH
+) {
   function displayNextEvent(event) {
     const timeText = getTimeOfEventAsText(event.date);
     const diffText = getTimeToEventAsText(event.date);
 
-    const summary = trimLongEventName(event.summary);
+    const summary = trimLongEventName(event.summary, maxSummaryLength);
 
     return `In ${diffText}: ${summary} at ${timeText}`;
   }
@@ -108,15 +111,16 @@ export function eventStatusToIndicatorText(eventStatus) {
     const endsInText = getTimeToEventAsText(currentEvent.end);
     const timeText = getTimeOfEventAsText(nextEvent.date);
 
-    const summary = trimLongEventName(nextEvent.summary);
+    const summary = trimLongEventName(nextEvent.summary, maxSummaryLength);
 
     return `Ends in ${endsInText}. Next: ${summary} at ${timeText}`;
   }
 
   function displayCurrentEvent(event) {
     const endsInText = getTimeToEventAsText(event.end);
+    const summary = trimLongEventName(event.summary, maxSummaryLength);
 
-    return `Ends in ${endsInText}: ${event.summary}`;
+    return `Ends in ${endsInText}: ${summary}`;
   }
 
   function displayNoEvents() {

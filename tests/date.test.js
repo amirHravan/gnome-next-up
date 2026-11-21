@@ -94,3 +94,39 @@ const text = eventStatusToIndicatorText({
   nextEvent: { summary: "Test", date: fivePastEleven },
 });
 check(text.endsWith("at 11:05"), `expected 11:05 in "${text}"`);
+
+// Event names are trimmed to the configured length
+const longName = "A".repeat(50);
+const longEvent = { summary: longName, date: new Date(Date.now() + 600000) };
+
+let longText = eventStatusToIndicatorText({
+  currentEvent: null,
+  nextEvent: longEvent,
+});
+check(longText.includes("A".repeat(35) + "..."), "names should be trimmed to 35");
+check(!longText.includes("A".repeat(36)), "names should not exceed the limit");
+
+// 0 shows the full name
+longText = eventStatusToIndicatorText(
+  { currentEvent: null, nextEvent: longEvent },
+  0
+);
+check(longText.includes(longName), "0 should disable trimming");
+
+// The current-event text is trimmed too
+longText = eventStatusToIndicatorText(
+  {
+    currentEvent: {
+      summary: longName,
+      date: new Date(Date.now() - 600000),
+      end: new Date(Date.now() + 600000),
+    },
+    nextEvent: null,
+  },
+  10
+);
+check(
+  longText.includes("A".repeat(10) + "..."),
+  "current event names should be trimmed"
+);
+check(!longText.includes("A".repeat(11)), "current names should respect the limit");

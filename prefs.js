@@ -57,6 +57,25 @@ export default class NextUpExtensionPreferences extends ExtensionPreferences {
 
     group.add(lookAheadRow);
 
+    const maxLengthRow = new Adw.SpinRow({
+      title: "Maximum event name length",
+      subtitle: "Characters; 0 shows the full name",
+      adjustment: new Gtk.Adjustment({
+        lower: 0,
+        upper: 200,
+        step_increment: 5,
+      }),
+    });
+
+    settings.bind(
+      "max-summary-length",
+      maxLengthRow,
+      "value",
+      Gio.SettingsBindFlags.DEFAULT
+    );
+
+    group.add(maxLengthRow);
+
     // Add our page to the window
     window.add(page);
   }

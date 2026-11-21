@@ -40,7 +40,7 @@ export default class NextUpExtension extends Extension {
         if (key === "which-panel") {
           this.unloadIndicator();
           this.loadIndicator();
-        } else if (key === "look-ahead-minutes") {
+        } else {
           this.refreshIndicator();
         }
       }
@@ -111,7 +111,10 @@ export default class NextUpExtension extends Extension {
 
     if (hasEvent) {
       this._indicator.setText(
-        DateHelperFunctions.eventStatusToIndicatorText(eventStatus)
+        DateHelperFunctions.eventStatusToIndicatorText(
+          eventStatus,
+          this._settings.get_int("max-summary-length")
+        )
       );
     }
   }
