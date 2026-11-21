@@ -94,8 +94,16 @@ export default class NextUpExtension extends Extension {
       ?.remove_child(this._indicator.container);
   }
 
+  // get_int() aborts the whole shell on a missing key, e.g. while an updated
+  // schema is being installed; fall back instead.
+  _getInt(key, fallback) {
+    return this._settings.settings_schema.has_key(key)
+      ? this._settings.get_int(key)
+      : fallback;
+  }
+
   refreshIndicator() {
-    const lookAheadMinutes = this._settings.get_int("look-ahead-minutes");
+    const lookAheadMinutes = this._getInt("look-ahead-minutes", 0);
     const events = DateHelperFunctions.getEventsToDisplay(
       this._indicator._calendarSource,
       lookAheadMinutes
@@ -113,7 +121,10 @@ export default class NextUpExtension extends Extension {
       this._indicator.setText(
         DateHelperFunctions.eventStatusToIndicatorText(
           eventStatus,
-          this._settings.get_int("max-summary-length")
+          this._getInt(
+            "max-summary-length",
+            DateHelperFunctions.MAX_EVENT_SUMMARY_LENGTH
+          )
         )
       );
     }

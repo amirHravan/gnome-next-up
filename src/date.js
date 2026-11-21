@@ -1,4 +1,4 @@
-const MAX_EVENT_SUMMARY_LENGTH = 35;
+export const MAX_EVENT_SUMMARY_LENGTH = 35;
 
 function trimLongEventName(summary, maxLength) {
   if (maxLength > 0 && summary.length > maxLength) {
